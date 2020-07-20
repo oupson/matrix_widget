@@ -5,18 +5,41 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Matrix Widget</title>
 
+        <link rel="stylesheet" type="text/css" href="./css/main.css"/>
         <link rel="stylesheet" type="text/css" href="./css/user.css"/>
+        <link rel="stylesheet" type="text/css" href="./css/header.css"/>
 
         <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
         <script src="./js/main.js"></script>
     </head>
     <body>
-        <div>
-            <h1>Matrix</h1>
+        <div class="header">
+            <a href="https://matrix.org/"><img src="./files/images/matrix-logo.svg"/></a>
         </div>
-        <h2>Members</h2>
-        <div id="user_list">
+        <div class="content">
+            <div class="summary_container">
+                <div class="brief_summary">
+                    <img id="icon"/>
+                    <div>
+                        <p id="name"></p>
+                        <p id="description"></p>
+                    </div>
+                </div>
+                <div id="long_description">
 
+                </div>
+            </div>
+            <div class="room_list">
+                <h1>Rooms</h1>
+                <div id="room_list">
+
+                </div>
+            </div>
+            <div class="member_list">
+                <h1>Members</h1>
+                <div id="user_list">
+                </div>
+            </div>
         </div>
     </body>
 </html>

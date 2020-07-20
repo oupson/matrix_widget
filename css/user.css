@@ -10,6 +10,7 @@
     width: 32px;
     height: 32px;
     object-fit: cover;
+    border-radius: 16px;
 }
 
 .user p {

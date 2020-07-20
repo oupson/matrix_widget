@@ -1,0 +1,63 @@
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    height: auto;
+    overflow: hidden auto;
+    flex-grow: 1;
+}
+
+.member_list {
+    padding: 8px;
+}
+
+.member_list h1 {
+    font-size: larger;
+    margin: 0px;
+}
+
+.room_list {
+    padding: 8px;
+}
+
+.room_list h1 {
+    font-size: larger;
+    margin: 0px;
+}
+
+
+.summary_container {
+    padding: 8px;
+}
+
+.brief_summary {
+    display: flex;
+    align-items: center;
+    height: 80px;
+}
+
+.brief_summary div {
+    padding: 8px;
+}
+
+#icon {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 80px;
+}
+
+#long_description {
+    margin: 16px;
+    height: 100px;
+    overflow: auto;
+    display: none;
+}
