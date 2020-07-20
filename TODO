@@ -1,0 +1,2 @@
+- use fetch instead of axios for less dependencies
+- Style
