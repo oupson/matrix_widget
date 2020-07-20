@@ -1,9 +1,22 @@
 .header {
     background-color: black;
     height: 64px;
+    display: flex;
 }
 
 .header img {
-    height: 48px;
-    margin: 8px;
+    height: 32px;
+    margin: 16px;
+}
+
+.header div {
+    flex-grow: 1;
+}
+
+.header input {
+    cursor: pointer;
+    padding-right: 16px;
+    color: white;
+    background-color: black;
+    border: none;
 }

@@ -44,7 +44,7 @@ body {
     height: 80px;
 }
 
-.brief_summary div {
+.brief_summary div:not(.group_image_replacement) {
     padding: 8px;
 }
 
@@ -53,6 +53,20 @@ body {
     height: 80px;
     object-fit: cover;
     border-radius: 80px;
+}
+
+.group_image_replacement {
+    background-color: black;
+    width: 80px;
+    height: 80px;
+    border-radius: 80px;
+    display: flex;
+    padding: 0px;
+}
+
+.group_image_replacement p {
+    margin: auto;
+    color: white;
 }
 
 #long_description {

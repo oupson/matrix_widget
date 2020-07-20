@@ -16,3 +16,16 @@
 .user p {
     margin: 8px;
 }
+
+.user_image_replacement {
+    background-color: black;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    display: flex;
+}
+
+.user_image_replacement p {
+    margin: auto;
+    color: white;
+}
