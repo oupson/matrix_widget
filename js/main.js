@@ -1,4 +1,4 @@
-const DEBUG = true;
+const DEBUG = false;
 var serverUrl = "https://matrix.org/";
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -23,18 +23,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function getAccessToken() {
-    const res = await axios.post(serverUrl + "_matrix/client/r0/register?kind=guest", {});
-    const { data } = await res;
+    const data = await (await fetch(serverUrl + "_matrix/client/r0/register?kind=guest", {
+        method: "POST",
+        body: "{}"
+    })).json()
     debuglog("Result of guest registering", data);
     return data.access_token;
 }
 
 async function getSummary(groupId, access_token) {
-    var summary = (await axios.get(serverUrl + `_matrix/client/r0/groups/${groupId}/summary`, {
+    var summary = await (await fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/summary`, {
         headers: {
             Authorization: "Bearer " + access_token
         }
-    })).data;
+    })).json()
     debuglog("Summary", summary);
 
     document.getElementById("icon").src = serverUrl + "_matrix/media/r0/download/" + summary.profile.avatar_url.replace("mxc://", "");
@@ -45,11 +47,11 @@ async function getSummary(groupId, access_token) {
 
 async function getRooms(groupId, access_token) {
     var room_list = document.getElementById("room_list");
-    let rooms = (await axios.get(serverUrl + `_matrix/client/r0/groups/${groupId}/rooms`, {
+    let rooms = await (await fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/rooms`, {
         headers: {
             Authorization: "Bearer " + access_token
         }
-    })).data;
+    })).json();
     debuglog("Room", rooms);
 
     rooms.chunk.forEach(async (room) => {
@@ -72,11 +74,11 @@ async function getRooms(groupId, access_token) {
 
 async function getUsers(groupId, access_token) {
     var user_list = document.getElementById("user_list");
-    let users = (await axios.get(serverUrl + `_matrix/client/r0/groups/${groupId}/users`, {
+    let users = await (await fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/users`, {
         headers: {
             Authorization: "Bearer " + access_token
         }
-    })).data;
+    })).json();
 
     users.chunk.forEach(async (user) => {
         debuglog("User", user);
