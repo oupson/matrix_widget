@@ -13,6 +13,7 @@ body {
     height: auto;
     overflow: hidden auto;
     flex-grow: 1;
+    background-color: white;
 }
 
 .member_list {

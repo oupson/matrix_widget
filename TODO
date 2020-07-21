@@ -1,2 +1,2 @@
-- use fetch instead of axios for less dependencies
 - Style
+- Param for displaying long description
