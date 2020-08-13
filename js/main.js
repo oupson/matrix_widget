@@ -1,4 +1,5 @@
-const DEBUG = false;
+const DEBUG = true;
+
 var serverUrl = "https://matrix.org/";
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -7,120 +8,172 @@ document.addEventListener('DOMContentLoaded', async () => {
     var groupId = urlParams.get("groupId");
     debuglog("GroupId", groupId);
 
-    document.getElementById("join_button").onclick = () => {
-        window.open("https://matrix.to/#/" + groupId);
-    }
-    if (urlParams.has("serverUrl")) {
-        serverUrl = urlParams.get("serverUrl");
-    }
+    if (groupId != null) {
+        var joinButton = /** @type {HTMLAnchorElement | null} */(document.getElementById("join_button"));
+        if (joinButton != null)
+            joinButton.href = "https://matrix.to/#/" + groupId;
 
-    if (!serverUrl.endsWith("/")) {
-        serverUrl += "/";
+        if (urlParams.has("serverUrl")) {
+            serverUrl = /** @type {string} */(urlParams.get("serverUrl"));
+        }
+
+        if (!serverUrl.endsWith("/")) {
+            serverUrl += "/";
+        }
+
+        getAccessToken().then((accessToken) => {
+            if (groupId != null) {
+                getSummary(groupId, accessToken);
+                getRooms(groupId, accessToken);
+                getUsers(groupId, accessToken);
+            }
+        })
+    } else {
+        console.error("Error, group id is null");
     }
-
-    var access_token = await getAccessToken();
-
-    getSummary(groupId, access_token);
-    getRooms(groupId, access_token);
-    getUsers(groupId, access_token);
 });
 
+/**
+ * Retrieve an anonymous access token from the server (Server must support anonymous login)
+ * @returns {Promise<string>} The promise, where value is the access token
+ */
 async function getAccessToken() {
-    const data = await (await fetch(serverUrl + "_matrix/client/r0/register?kind=guest", {
+    return fetch(serverUrl + "_matrix/client/r0/register?kind=guest", {
         method: "POST",
         body: "{}"
-    })).json()
-    debuglog("Result of guest registering", data);
-    return data.access_token;
+    }).then((r) => r.json())
+        .then((data) => {
+            debuglog("Result of guest registering", data);
+            return data.access_token
+        });
 }
 
-async function getSummary(groupId, access_token) {
-    var summary = await (await fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/summary`, {
+/**
+ * Function that add the summary to the widget
+ * @param {string} groupId The group id
+ * @param {string} accessToken retrieved from anonymous login.
+ */
+async function getSummary(groupId, accessToken) {
+    fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/summary`, {
         headers: {
-            Authorization: "Bearer " + access_token
+            Authorization: "Bearer " + accessToken
         }
-    })).json()
-    debuglog("Summary", summary);
+    }).then((res) => res.json())
+        .then((summary) => {
+            debuglog("Summary", summary);
 
-    if (summary.profile.avatar_url != null && summary.profile.avatar_url != "") {
-        document.getElementById("icon").src = serverUrl + "_matrix/media/r0/download/" + summary.profile.avatar_url.replace("mxc://", "");
-    } else { 
-        let group_image_div = document.createElement("div")
-        group_image_div.classList.add("group_image_replacement");
-        group_image_div.innerHTML = "<p>" + summary.profile.name[0] + "</p>";
-        document.getElementById("icon").parentNode.replaceChild(group_image_div, document.getElementById("icon"));
-    }
-    
-    document.getElementById("description").innerHTML = summary.profile.short_description;
-    document.getElementById("long_description").innerHTML = summary.profile.long_description;
-    document.getElementById("name").innerHTML = summary.profile.name;
+            var icon = /** @type {HTMLImageElement | null} */(document.getElementById("icon"));
+            var description = document.getElementById("description");
+            var longDescription = document.getElementById("long_description");
+            var name = document.getElementById("name");
+
+            if (description != null)
+                description.innerHTML = summary.profile.short_description;
+            if (longDescription != null)
+                longDescription.innerHTML = summary.profile.long_description;
+            if (name != null)
+                name.innerHTML = summary.profile.name;
+
+            if (summary.profile.avatar_url != null && summary.profile.avatar_url != "" && icon != null) {
+                icon.src = serverUrl + "_matrix/media/r0/download/" + summary.profile.avatar_url.replace("mxc://", "");
+            } else if (icon != null && icon.parentNode != null) {
+                let groupImageDiv = document.createElement("div")
+                groupImageDiv.classList.add("group_image_replacement");
+                groupImageDiv.innerHTML = "<p>" + summary.profile.name[0] + "</p>";
+                icon.parentNode.replaceChild(groupImageDiv, icon);
+            }
+        })
 }
 
-async function getRooms(groupId, access_token) {
-    var room_list = document.getElementById("room_list");
-    let rooms = await (await fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/rooms`, {
+/**
+ * Append the rooms to the widget
+ * @param {string} groupId The group id
+ * @param {string} accessToken retrieved from anonymous login.
+ */
+function getRooms(groupId, accessToken) {
+    fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/rooms`, {
         headers: {
-            Authorization: "Bearer " + access_token
+            Authorization: "Bearer " + accessToken
         }
-    })).json();
-    debuglog("Room", rooms);
+    }).then((res) => res.json())
+        .then((rooms) => {
+            debuglog("Room", rooms);
+            var room_list = document.getElementById("room_list");
+            rooms.chunk.forEach(async (/** @type {any} */ room) => {
+                debuglog("Room", room);
 
-    rooms.chunk.forEach(async (room) => {
-        debuglog("Room", room);
-        let room_div = document.createElement("div");
-        room_div.classList.add("user");
+                let roomDiv = document.createElement("div");
+                roomDiv.classList.add("user");
 
-        let room_image = document.createElement("img");
-        if (room.avatar_url != null && room.avatar_url != "") {
-            room_image.src = serverUrl + "_matrix/media/r0/download/" + room.avatar_url.replace("mxc://", "");
-        }
-        room_div.appendChild(room_image);
+                if (room.avatar_url != null && room.avatar_url != "") {
+                    let roomImage = document.createElement("img");
+                    roomImage.src = serverUrl + "_matrix/media/r0/download/" + room.avatar_url.replace("mxc://", "");
+                    roomDiv.appendChild(roomImage);
+                } else {
+                    let roomImageDiv = document.createElement("div")
+                    roomImageDiv.classList.add("user_image_replacement");
+                    roomImageDiv.innerHTML = "<p>" + room.name[0].toUpperCase() + "</p>";
+                    roomDiv.appendChild(roomImageDiv);
+                }
 
-        let room_name = document.createElement("p");
-        room_name.innerHTML = (room.name != "" && room.name != null) ? room.name : room.room_id;
-        room_div.appendChild(room_name);
-        room_list.appendChild(room_div);
-    });
+                let roomName = document.createElement("p");
+                roomName.innerHTML = (room.name != "" && room.name != null) ? room.name : room.room_id;
+                roomDiv.appendChild(roomName);
+
+                if (room_list != null)
+                    room_list.appendChild(roomDiv);
+            });
+        })
 }
 
-async function getUsers(groupId, access_token) {
-    var user_list = document.getElementById("user_list");
-    let users = await (await fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/users`, {
+/**
+ * Append the users to the widget
+ * @param {string} groupId The group id
+ * @param {string} accessToken retrieved from anonymous login.
+ */
+async function getUsers(groupId, accessToken) {
+    fetch(serverUrl + `_matrix/client/r0/groups/${groupId}/users`, {
         headers: {
-            Authorization: "Bearer " + access_token
+            Authorization: "Bearer " + accessToken
         }
-    })).json();
+    }).then((res) => res.json())
+        .then((users) => {
+            debuglog("Users", users);
 
-    users.chunk.forEach(async (user) => {
-        debuglog("User", user);
-        let user_div = document.createElement("div");
-        user_div.classList.add("user");
+            var userList = document.getElementById("user_list");
 
-        if (user.avatar_url != null && user.avatar_url != "") {
-            let user_image = document.createElement("img");
-        
-            user_image.src = serverUrl + "_matrix/media/r0/download/" + user.avatar_url.replace("mxc://", "");
-            user_div.appendChild(user_image);
-        } else {
-            let user_image_div = document.createElement("div")
-            user_image_div.classList.add("user_image_replacement");
-            user_image_div.innerHTML = "<p>" + ((user.displayname != "" && user.displayname != null) ? user.displayname : user.user_id)[0] + "</p>";
-            user_div.appendChild(user_image_div);
-        }
+            users.chunk.forEach(async (/** @type {any} */ user) => {
+                debuglog("User", user);
 
-        let user_name = document.createElement("p");
-        user_name.innerHTML = (user.displayname != "" && user.displayname != null) ? user.displayname : user.user_id;
-        user_div.appendChild(user_name);
-        user_list.appendChild(user_div);
-    });
+                let userDiv = document.createElement("div");
+                userDiv.classList.add("user");
+
+                if (user.avatar_url != null && user.avatar_url != "") {
+                    let userImage = document.createElement("img");
+
+                    userImage.src = serverUrl + "_matrix/media/r0/download/" + user.avatar_url.replace("mxc://", "");
+                    userDiv.appendChild(userImage);
+                } else {
+                    let userImageDiv = document.createElement("div")
+                    userImageDiv.classList.add("user_image_replacement");
+                    userImageDiv.innerHTML = "<p>" + ((user.displayname != "" && user.displayname != null) ? user.displayname : user.user_id)[0].toUpperCase() + "</p>";
+                    userDiv.appendChild(userImageDiv);
+                }
+
+                let user_name = document.createElement("p");
+                user_name.innerHTML = (user.displayname != "" && user.displayname != null) ? user.displayname : user.user_id;
+                userDiv.appendChild(user_name);
+
+                if (userList != null)
+                    userList.appendChild(userDiv);
+            });
+        })
 }
 
-
-function getGroupId() {
-    let splited = document.URL.split("?");
-    return splited[splited.length-1];
-}
-
+/**
+ * @param {string} name 
+ * @param {*} content 
+ */
 function debuglog(name, content) {
     if (DEBUG) {
         console.log(name + " : " + JSON.stringify(content, null, 4));

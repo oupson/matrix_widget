@@ -54,6 +54,7 @@ body {
     height: 80px;
     object-fit: cover;
     border-radius: 80px;
+    background-color: black;
 }
 
 .group_image_replacement {
